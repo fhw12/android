@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+build.gradle
+<pre>
+dependencies {
+    implementation "androidx.navigation:navigation-compose:2.5.3"
+}
+</pre>
+
+<br>
+AppNavigation.kt
+<pre>
+sealed class NavRoute(val route: String){
+    object OnBoardScreen: NavRoute("OnboardScreen")
+    object AuthScreen: NavRoute("AuthScreen")
+    object MainScreen: NavRoute("MainScreen")
+}
+
+@Composable
+fun NavigationController() {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = NavRoute.OnBoardScreen.route){
+        composable(NavRoute.OnBoardScreen.route){ OnboardScreen(navController, OnboardViewModel()) }
+        composable(NavRoute.AuthScreen.route){ AuthScreen(navController, AuthViewModel()) }
+        composable(NavRoute.MainScreen.route){ MainScreen(navController, MainViewModel()) }
+    }
+}
+</pre>
+
+<br>
+MainActivity.kt
+<pre>
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colors.background
+            ) {
+                NavigationController()
+            }
+        }
+    }
+}
+</pre>
+
+<br>
+BottomBar
+<pre>
+@Composable
+fun MainScreen(navController: NavController, viewModel: MainViewModel){
+    Scaffold(
+        bottomBar = { BottomBar() }
+    ) {
+        innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            MainScreenContent(navController, viewModel)
+        }
+    }
+}
+
+@Composable
+fun BottomBar(){
+    BottomNavigation(
+        backgroundColor = Color.White,
+    ) {
+
+        val bottomNavigationItems = arrayOf(
+            BottomNavigationScreens.screenName1,
+            BottomNavigationScreens.screenName2,
+            BottomNavigationScreens.screenName3,
+            BottomNavigationScreens.screenName4,
+        )
+
+        repeat(4) {i ->
+            BottomNavigationItem(
+                icon = {
+                    Icon(
+                        modifier = Modifier.size(20.dp, 20.dp),
+                        painter = painterResource(id = bottomNavigationItems[i].resIcon),
+                        contentDescription = null
+                    )
+                },
+                label = { Text(bottomNavigationItems[i].text, fontSize = 10.sp) },
+                selected = false,
+                onClick = { }
+            )
+        }
+    }
+}
+
+sealed class BottomNavigationScreens(val route: String, val resIcon: Int, val text: String){
+    object screenName1: BottomNavigationScreens("screenName1", R.drawable.bottombar_item1, "text 1")
+    object screenName2: BottomNavigationScreens("screenName2", R.drawable.bottombar_item2, "text 2")
+    object screenName3: BottomNavigationScreens("screenName3", R.drawable.bottombar_item3, "text 3")
+    object screenName4: BottomNavigationScreens("screenName4", R.drawable.bottombar_item4, "text 4")
+}
+
+</pre>
+
+</body>
+</html>

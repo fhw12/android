@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+DbObject.kt
+<pre>
+object DbObject {
+    const val TABLE_NAME = "main"
+    const val COLUMN_NAME_KEY = "key_"
+    const val COLUMN_NAME_VALUE = "value_"
+
+    const val DATABASE_VERSION = 1
+    const val DATABASE_NAME = "MainDB.db"
+
+    const val CREATE_TABLE = "CREATE TABLE IF NOT EXISTS $TABLE_NAME (${BaseColumns._ID} INTEGER PRIMARY KEY, $COLUMN_NAME_KEY text, $COLUMN_NAME_VALUE text)"
+    const val DELETE_TABLE = "DROP TABLE IF EXISTS $TABLE_NAME"
+}
+</pre>
+
+<br>
+DbHelper.kt
+<pre>
+class DbHelper(context: Context): SQLiteOpenHelper(context, DbObject.DATABASE_NAME,null, DbObject.DATABASE_VERSION) {
+    override fun onCreate(db: SQLiteDatabase?){
+        db?.execSQL(DbObject.CREATE_TABLE)
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int){
+        db?.execSQL(DbObject.DELETE_TABLE)
+        onCreate(db)
+    }
+}
+</pre>
+
+<br>
+DbManager.kt
+<pre>
+class DbManager(context: Context){
+    private val dbHelper = DbHelper(context)
+    private var db: SQLiteDatabase = dbHelper.writableDatabase
+
+    fun setData(key: String, value: String){
+        db.delete(DbObject.TABLE_NAME, "${DbObject.COLUMN_NAME_KEY}=?", arrayOf(key))
+        val values = ContentValues().apply{
+            put(DbObject.COLUMN_NAME_KEY, key)
+            put(DbObject.COLUMN_NAME_VALUE, value)
+        }
+        db.insert(DbObject.TABLE_NAME, null, values)
+    }
+
+    fun getData(key: String): String{
+        var value: String = ""
+        val cursor = db.query(DbObject.TABLE_NAME, null, "key_=?", arrayOf(key), null, null, null)
+        if (cursor.moveToNext()) {
+            value = cursor.getString(cursor.getColumnIndexOrThrow(DbObject.COLUMN_NAME_VALUE))
+        }
+        cursor.close()
+        return value
+    }
+
+    fun allData(key: String): MutableList<span><</span>String> {
+        var values = mutableStateListOf<span><</span>String>()
+        val cursor = db.query(DbObject.TABLE_NAME, null, null, null, null, null, null)
+        while(cursor.moveToNext()){
+            val key = cursor.getString(cursor.getColumnIndexOrThrow(DbObject.COLUMN_NAME_KEY))
+            val value = cursor.getString(cursor.getColumnIndexOrThrow(DbObject.COLUMN_NAME_VALUE))
+            values.add("$key: $value")
+        }
+        cursor.close()
+        return values
+    }
+}
+</pre>
+
+<br>
+MainActivity.kt
+<pre>
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val dbManager = DbManager(this)
+
+        setContent {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                MainScreen(dbManager)
+            }
+        }
+    }
+}
+</pre>
+
+</body>
+</html>

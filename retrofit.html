@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+build.gradle
+<pre>
+dependencies {
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+}
+</pre>
+
+<br>
+<pre>json: { id: 1, title: "text", data = ["...", "...", "..."] }</pre>
+data class для хранения полученных данных из json
+<pre>
+data class DataClassName(
+    val id: Int,
+    val title: Int,
+    val data: List<span><</span>String>
+)
+</pre>
+
+<br>
+Интерфейс
+<pre>
+interface InterfaceNameApi {
+    @GET("simple/{id}")
+    suspend fun getItemByName(@Path("id") id: String): DataClassName
+}
+</pre>
+
+<br>
+Создание retrofit объекта и выполнение запроса
+<pre>
+val retrofit = Retrofit.Builder()
+    .baseUrl("https://site.domain/")
+    .addConverterFactory(GsonConverterFactory.create())
+    .build()
+
+val testApi = retrofit.create(InterfaceNameApi::class.java)
+
+
+CoroutineScope(Dispatchers.IO).launch {
+    try {
+        val item = testApi.getItemByName((0..10).random().toString())
+        val titleItem = item.title
+    }catch(e: HttpException){
+        // Обработка ошибки
+    }
+}
+</pre>
+
+</body>
+</html>
